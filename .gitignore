@@ -1,0 +1,6 @@
+*.DStore
+*.csv
+*.tsv
+*.mgf
+*.log
+*.tar.gz
