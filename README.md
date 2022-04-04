@@ -1,84 +1,151 @@
-# Tutorial for NPatlas - OpenNPDB in silico fragmentation data treatment
-
+# In Silico DataBase
 
 ## Prior to fragmentation 
 
-Complete metadate file is converted to list of Unique ID and smiles space separated (for cfm id input)
+// TODO
+Add LOTUS2SMILES step
 
-`python frag_list_preparator.py ../npatlas_data/np_atlas_2019_12.tsv ../npatlas_data/np_atlas_2019_12_for_frag.tsv NPAID SMILES`
-`python scripts/frag_list_preparator.py ./open_np_db_data/open_NP_db.tsv ./open_np_db_data/open_NP_db_for_frag.txt shortinchikey shortinchikey smiles`
-`python scripts/frag_list_preparator.py ../../../../210505_lotus_dnp_single_sik.csv ./lotus_data/lotus_data_for_frag.txt short_inchikey short_inchikey structure_smiles`
+## Prepare CFM on cluster
 
+### Install
 
-## Split the file
-
-(Works on Linux based shells)
-
-split -a 5 -l 500 -d ../open_np_db_data/open_NP_db_tofrag.txt ../open_np_db_data/opennpdb_tofrag/opennpdb_
-split -a 5 -l 500 -d ./lotus_data/lotus_data_for_frag.txt ./lotus_data/lotus_data_for_frag/lotus_data_
+This installation procedure works on the [UniGE HPC](https://www.unige.ch/eresearch/en/services/hpc/). This does not mean it will work on another.
 
 
+First, create a `cmf-4` directory:
+```
+mkdir cfm-4
+```
 
-## Prepare mutilple bash file to launch on baobab
+Then load requested modules:
+```
+module load GCC/6.3.0-2.27 Singularity/2.4.2
+```
 
-Be careful the nodes partition names have changed.
+Build cfm-4 from its last Docker image:
+```
+singularity build cfm-4/cfm.sif docker://wishartlab/cfmid
+```
+
+### Test
+
+Pull the previsouly generated smiles list (this command is not generic, it needs to be adapted):
+```
+scp Downloads/tmp/lotus/smiles4cfm.txt rutza@login2.baobab.hpc.unige.ch:smiles.txt
+```
+
+Create a test file with 10 structures to check if everything works fine:
+```
+head smiles.txt -n 10 > test.txt
+```
+
+Create a `test` directory:
+```
+mkdir test
+```
+
+Split the test file asit would be split if real:
+```
+split --lines=1 --numeric-suffixes=1 --suffix-length=4 --additional-suffix=.txt test.txt test/test-
+```
+
+Create a `testout` directory:
+```
+mkdir testout
+```
+
+Run [run_cfm_test.sh](scripts/run_cfm_test.sh) in a sbatch array:
+```
+sbatch --array=1-10 run_cfm_test.sh
+```
+
+## Run CFM on cluster (full)
+
+### Split in subfiles
+
+Depending on the length of your SMILES list, you may want to split it:
+
+First, create a `smiles` directory:
+```
+mkdir smiles
+```
+
+Split the big file:
+```
+split --lines=100 --numeric-suffixes=1 --suffix-length=4 --additional-suffix=.txt smiles.txt smiles/smiles-
+```
+
+### Positive
+
+Create the `posout` directory:
+```
+mkdir posout
+```
+
+Run [run_cfm.sh](scripts/run_cfm.sh) in a sbatch array (adapt the array length):
+```
+sbatch --array=1-1461 run_cfm.sh
+```
+
+### Negative
+
+Create the `negout` directory:
+```
+mkdir negout
+```
+
+Run [run_cfm_neg.sh](scripts/run_cfm_neg.sh) in a sbatch array (adapt the array length):
+```
+sbatch --array=1-1461 run_cfm_neg.sh
+```
 
 
+## Fetch CFM results
 
-## Fetching cfm-predict results
+Download CFM fragmentation results from the baob server (this command is not generic, it needs to be adapted):
+```
+scp -r rutza@login2.baobab.hpc.unige.ch:posout ./results
+scp -r rutza@login2.baobab.hpc.unige.ch:negout ./results_neg
+```
 
-Download cfm-predict fragmentation results from the baob server using rsync command
+## Treating the raw log files
 
-`rsync -rvz -e 'ssh' --progress allardp@baobab2.unige.ch:/home/allardp/CFM_results/npatlas ./results`
-`rsync -rvz -e 'ssh' --progress allardp@baobab2.unige.ch:/home/allardp/CFM_results/opennpdb ./results`
+// TODO
+Detail conda env
 
-
-This code line : 
-
-`find ./ -type f -name '*.mgf' | wc  `
-
-allows to count all file in a folder. Here 25090 files for NPatlas
-
-
-## Pruning the raw log files
-
-The output of cfm-predict consist of .log file containing mass spectra, where each fragments are individually labelled and eventually linked to a substrcture. Such information might be usefull later but for now we only want to keep the raw ms data
-
-(need to define a help function here)
-
-`python raw_log_treater_npatlas.py ../npatlas_data/results_npatlas/npatlas/ .log`
-
-At this step .log file should be pruned and contains only digits (m/z and intensities)
-
-
-
+The output of cfm-predict consist of .log file containing mass spectra, where each fragments are individually labelled and eventually linked to a substrcture. 
+Such information might be usefull later but for now we only want to keep the raw ms data:
+```
+python scripts/log2mgf.py
+```
 
 ## Populating the mgf headers
 
-### Preparation of the adducted metadata table
+### Preparation of the headers
 
-We need to prepare and adducted dataframe containing the protonated and deprotonated masses
-
-This script recquire rdkit so we build a environment.yml file from a dedicated conda env
-
-`conda env export -n conda-env -f /path/to/environment.yml`
-
-`python table_adducter_npatlas_script.py ../npatlas_data/np_atlas_2019_12.tsv ../npatlas_data/np_atlas_2019_12_adducted.tsv`
-
+We need to prepare and adducted table containing the protonated and deprotonated masses:
+```
+python scripts/prepare_headers.py
+```
 
 ### Addition of the metadata to the individual mgf headers
 
-We can now populate each raw mgf with its corresponding metadata. For this we use the treat_npatlas.py script
+We can now populate each mgf with its corresponding metadata:
+```
+python scripts/populate_headers.py
+```
 
-`python treat_npatlas.py ../npatlas_data/np_atlas_2019_12_adducted.tsv ../npatlas_data/results_npatlas/npatlas/`
+
+// Stoped here
 
 
 ## Generating the final spectral file
 
 We concatenate each documented mgf files to a single spectral mgf file.
 
-`find ./ -type f -name '*.mgf' | while read F; do cat ${F} >> ../../npatlas_ISDB_pos.mgf; done`
-
+```
+find ./ -type f -name '*.mgf' | while read F; do cat ${F} >> ../../npatlas_ISDB_pos.mgf; done
+```
 
 ## Outputting non-fragmented entries
 
