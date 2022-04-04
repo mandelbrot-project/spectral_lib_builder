@@ -20,7 +20,8 @@ try:
     metadata_file_path = sys.argv[1]
     delimiter_input = sys.argv[2]
     adducted_metadata_file_path = sys.argv[3]
-    column_name = sys.argv[4]
+    column_name_smiles = sys.argv[4]
+    column_name_sik = sys.argv[5]
     print('Parsing file ' 
           + metadata_file_path 
           + ' and calculating exact mass, protonated and deprotonated adducts exact mass and appending to new metadata file ' 
@@ -34,7 +35,8 @@ if delimiter_input == "s+":
 else:
     df = pd.read_csv(metadata_file_path, sep = delimiter_input) 
 
-df['SMILES'] = df[column_name]
+df['SMILES'] = df[column_name_smiles]
+df['SHORT_IK'] = df[column_name_sik]
 df['ROMol'] = df['SMILES'].map(Chem.MolFromSmiles)
 
 df = df[~df['ROMol'].isnull()]
