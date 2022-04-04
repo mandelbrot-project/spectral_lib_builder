@@ -1,9 +1,16 @@
 # In Silico DataBase
 
+
+## Foreword
+
+All small python scripts require `environment.yml` to be installed to work.
+
 ## Prior to fragmentation 
 
-// TODO
-Add LOTUS2SMILES step
+Prepare a list of identified SMILES to fragment.
+For the moment, we took the structures from [https://doi.org/10.5281/zenodo.5794106](https://doi.org/10.5281/zenodo.5794106) as starting point.
+
+//TODO Add tiny fetching + preparing generic script. # adapt from lotus R scripts (2022-04-04 AR)
 
 ## Prepare CFM on cluster
 
@@ -110,9 +117,6 @@ scp -r rutza@login2.baobab.hpc.unige.ch:negout ./results_neg
 
 ## Treating the raw log files
 
-// TODO
-Detail conda env
-
 The output of cfm-predict consist of .log file containing mass spectra, where each fragments are individually labelled and eventually linked to a substrcture. 
 Such information might be usefull later but for now we only want to keep the raw ms data:
 ```
@@ -135,8 +139,8 @@ We can now populate each mgf with its corresponding metadata:
 python scripts/populate_headers.py
 ```
 
+:warning: Stoped here (2022-04-04 AR)
 
-// Stoped here
 
 
 ## Generating the final spectral file
@@ -174,7 +178,3 @@ https://molvs.readthedocs.io/en/latest/index.html
 ## NPAtlas
 
 Fragmented NPAtlas spectral file (.mgf) and associated metadata are available here [NPAtlas_ISDB](https://www.dropbox.com/sh/rz9giwvzuhnvlpo/AABLJIu2EKo7pJrP-ALHFbfua?dl=0)
-
-
-
-
