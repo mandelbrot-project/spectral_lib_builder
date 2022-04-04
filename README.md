@@ -143,7 +143,8 @@ We can now populate each mgf with its corresponding metadata:
 
 We concatenate each documented mgf files to a single spectral mgf file:
 ```
-bash scripts/concat.sh
+bash scripts/concat.sh YOUR_RAW_RESULTS_DIR_POS/ isdb_pos.mgf # or
+bash scripts/concat.sh YOUR_RAW_RESULTS_DIR_NEG/ isdb_neg.mgf
 ```
 
 :warning: Stoped here (2022-04-04 AR)
