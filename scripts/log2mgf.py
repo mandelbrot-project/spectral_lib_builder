@@ -47,9 +47,9 @@ for filename in glob.iglob(str(directory_name) + '*' + str(extension_type), recu
         list_energy_all = list_energy_all.astype(float)
 
         # manipulation
-        if len(sys.argv) > 3:
+        if manipulation is not None:
             # must be one of ['mean','max','sum']
-            list_energy_all_manipulated = list_energy_all.groupby(['mass']).eval(sys.argv[3])()
+            list_energy_all_manipulated = list_energy_all.groupby(['mass']).eval(manipulation)()
         else:
             list_energy_all_manipulated = list_energy_all['mass']
 
