@@ -1,6 +1,5 @@
 # In Silico DataBase
 
-
 ## Foreword
 
 All small python scripts require `environment.yml` to be installed to work.
@@ -106,7 +105,6 @@ Run [run_cfm_neg.sh](scripts/run_cfm_neg.sh) in a sbatch array (adapt the array 
 sbatch --array=1-1461 run_cfm_neg.sh
 ```
 
-
 ## Fetch CFM results
 
 Download CFM fragmentation results from the baob server (this command is not generic, it needs to be adapted):
@@ -119,8 +117,9 @@ scp -r rutza@login2.baobab.hpc.unige.ch:negout ./results_neg
 
 The output of cfm-predict consist of .log file containing mass spectra, where each fragments are individually labelled and eventually linked to a substrcture. 
 Such information might be usefull later but for now we only want to keep the raw ms data:
+If you want to merge the three different energies you can choose between 'max','mean', and 'sum' for the moment.
 ```
-python scripts/log2mgf.py
+python scripts/log2mgf.py YOUR_RAW_RESULTS_DIR/ log sum
 ```
 
 ## Populating the mgf headers
@@ -129,27 +128,26 @@ python scripts/log2mgf.py
 
 We need to prepare and adducted table containing the protonated and deprotonated masses:
 ```
-python scripts/prepare_headers.py
+python scripts/prepare_headers.py YOUR_SMILES_LIST YOUR_DELIMITER YOUR_OUTPUT_PATH YOUR_SMILES_COLUMN_NAME YOUR_SHORT_INCHIKEY_COLUMN_NAME
 ```
 
 ### Addition of the metadata to the individual mgf headers
 
 We can now populate each mgf with its corresponding metadata:
 ```
-python scripts/populate_headers.py
+ python scripts/populate_headers.py YOUR_ADDUCTED_FILE_PATH YOUR_RAW_RESULTS_DIR_POS/ positive # or
+ python scripts/populate_headers.py YOUR_ADDUCTED_FILE_PATH YOUR_RAW_RESULTS_DIR_NEG/ negative 
+```
+
+## Generating the final spectral file
+
+We concatenate each documented mgf files to a single spectral mgf file:
+```
+bash scripts/concat.sh
 ```
 
 :warning: Stoped here (2022-04-04 AR)
 
-
-
-## Generating the final spectral file
-
-We concatenate each documented mgf files to a single spectral mgf file.
-
-```
-find ./ -type f -name '*.mgf' | while read F; do cat ${F} >> ../../npatlas_ISDB_pos.mgf; done
-```
 
 ## Outputting non-fragmented entries
 

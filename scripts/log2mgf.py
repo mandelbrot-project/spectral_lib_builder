@@ -18,7 +18,7 @@ try:
     directory_name=sys.argv[1]
     extension_type=sys.argv[2]
     manipulation=sys.argv[3]
-    print('Parsing directory' + directory_name + ' with file extension :' + extension_type)
+    print('Parsing directory ' + directory_name + ' with file extension: ' + extension_type)
 except:
     print('Please pass parent directory, where the .log files are placed')
 
@@ -40,16 +40,22 @@ for filename in glob.iglob(str(directory_name) + '*' + str(extension_type), recu
         
         # since we want to keep all of them we append them to a unique df, order them by mass
         list_energy_all = pd.DataFrame(re.findall(p, split[1]))
-        list_energy_all = list_energy_all.append(pd.DataFrame(re.findall(p, split[2])))
-        list_energy_all = list_energy_all.append(pd.DataFrame(re.findall(p, split[3])))
+        list_energy_all = pd.concat([list_energy_all, pd.DataFrame(re.findall(p, split[2]))])
+        list_energy_all = pd.concat([list_energy_all, pd.DataFrame(re.findall(p, split[3]))])
         list_energy_all.rename(columns={0:'mass'},inplace=True)
         list_energy_all['mass'] = pd.to_numeric(list_energy_all['mass'], errors='coerce')
         list_energy_all = list_energy_all.astype(float)
 
         # manipulation
-        if manipulation is not None:
+        if manipulation == 'mean':
             # must be one of ['mean','max','sum']
-            list_energy_all_manipulated = list_energy_all.groupby(['mass']).eval(manipulation)()
+            list_energy_all_manipulated = list_energy_all.groupby(['mass']).mean()
+        elif manipulation == 'max':
+            # must be one of ['mean','max','sum']
+            list_energy_all_manipulated = list_energy_all.groupby(['mass']).max()
+        elif manipulation == 'sum':
+            # must be one of ['mean','max','sum']
+            list_energy_all_manipulated = list_energy_all.groupby(['mass']).sum()
         else:
             list_energy_all_manipulated = list_energy_all['mass']
 
