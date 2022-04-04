@@ -6,16 +6,6 @@ Created on Fri Feb 14 16:08:34 2020
 @author: pma
 """
 
-# Fetches info from a metadata table and populates mgf headers accordingly
-
-#|   Be careful !!! use python2 and not python3 to launch this script !!! |
-# ---------------------------------------------------
-#        \   ^__^
-#         \  (oo)\_______
-#            (__)\       )\/\
-#               ||----w |
-#               ||     ||
-
 import csv
 import sys
 
