@@ -86,9 +86,9 @@ for pos, row in data.items():
         # "N/A"  # Change that
         # )
     if mode == "negative":
-        content += "IONMODE=POSITIVE\n"
-    else:
         content += "IONMODE=NEGATIVE\n"
+    else:
+        content += "IONMODE=POSITIVE\n"
     content += "EXACTMASS={}\n".format(row[header.index('EMW')])
     content += "NAME={}\n".format(row[header.index('SHORT_IK')])
     content += "SMILES={}\n".format(row[header.index('SMILES')])
