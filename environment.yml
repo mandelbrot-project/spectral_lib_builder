@@ -1,0 +1,14 @@
+name: spectral_lib_builder
+channels:
+  - rdkit
+  - conda-forge
+  - defaults
+dependencies:
+  - csv
+  - glob
+  - os
+  - rdkit
+  - re
+  - sys
+  - pandas
+  - python >=3.5.*
