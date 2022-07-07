@@ -7,9 +7,9 @@ All small python scripts require `environment.yml` to be installed to work.
 ## Prior to fragmentation 
 
 Prepare a list of identified SMILES to fragment.
-For the moment, we took the structures from [https://doi.org/10.5281/zenodo.5794106](https://doi.org/10.5281/zenodo.5794106) as starting point.
+For the moment, we took the structures from [https://doi.org/10.5281/zenodo.6378223](https://doi.org/10.5281/zenodo.6378223) as starting point (a R solution is given at [scripts/lotus2cfm.R](scripts/lotus2cfm.R) .
 
-//TODO Add tiny fetching + preparing generic script. # adapt from lotus R scripts (2022-04-04 AR)
+//TODO Translate it for python afficionados (2022-07-07 AR)
 
 ## Prepare CFM on cluster
 
@@ -37,7 +37,14 @@ singularity build cfm-4/cfm.sif docker://wishartlab/cfmid
 
 Pull the previsouly generated smiles list (this command is not generic, it needs to be adapted):
 ```
-scp Downloads/tmp/lotus/smiles4cfm.txt rutza@login2.baobab.hpc.unige.ch:smiles.txt
+scp smiles4cfm.txt rutza@login2.baobab.hpc.unige.ch:smiles.txt
+```
+
+Also pull last bash commands:
+```
+scp scripts/run_cfm_test.sh rutza@login2.baobab.hpc.unige.ch:run_cfm_test.sh
+scp scripts/run_cfm.sh rutza@login2.baobab.hpc.unige.ch:run_cfm.sh
+scp scripts/run_cfm_neg.sh rutza@login2.baobab.hpc.unige.ch:run_cfm_neg.sh
 ```
 
 Create a test file with 10 structures to check if everything works fine:
@@ -81,6 +88,11 @@ Split the big file:
 split --lines=100 --numeric-suffixes=1 --suffix-length=4 --additional-suffix=.txt smiles.txt smiles/smiles-
 ```
 
+Count how many entries it generated for the next step
+```
+ls smiles/ | wc -l
+```
+
 ### Positive
 
 Create the `posout` directory:
@@ -88,9 +100,9 @@ Create the `posout` directory:
 mkdir posout
 ```
 
-Run [run_cfm.sh](scripts/run_cfm.sh) in a sbatch array (adapt the array length):
+Run [run_cfm.sh](scripts/run_cfm.sh) in a sbatch array (**adapt the array length**):
 ```
-sbatch --array=1-1461 run_cfm.sh
+sbatch --array=1-2875 run_cfm.sh
 ```
 
 ### Negative
@@ -100,9 +112,9 @@ Create the `negout` directory:
 mkdir negout
 ```
 
-Run [run_cfm_neg.sh](scripts/run_cfm_neg.sh) in a sbatch array (adapt the array length):
+Run [run_cfm_neg.sh](scripts/run_cfm_neg.sh) in a sbatch array (**adapt the array length**):
 ```
-sbatch --array=1-1461 run_cfm_neg.sh
+sbatch --array=1-2875 run_cfm_neg.sh
 ```
 
 ## Fetch CFM results
@@ -147,33 +159,8 @@ bash scripts/concat.sh YOUR_RAW_RESULTS_DIR_POS/ isdb_pos.mgf # or
 bash scripts/concat.sh YOUR_RAW_RESULTS_DIR_NEG/ isdb_neg.mgf
 ```
 
-:warning: Stoped here (2022-04-04 AR)
-
-
-## Outputting non-fragmented entries
-
-For several reasons (charged compounds, some tautomers, structures too heavy to be fragmented in a reasonable amount of time) some entries might not have been fragmented. 
-
-To find them we will first list all correctly converted mgf
-
-`find ./ -type f -name '*.mgf' | sed 's!.*/!!' | sed 's!^!!' >  list_mgf.txt`
-
-or here eventually without the extension
-
-`find ./ -type f -name '*.mgf' | sed 's!.*/!!' | sed 's!.mgf!!' >  ../../list_mgf.txt`
-
-And then the list is compared to the initial input using the table_comparator.py 
-
-`python table_comparator.py ../npatlas_data/npatlas_for_frag.txt ../npatlas_data/list_mgf.txt ../npatlas_data/unfragged_list.txt`
-
-
-### check molVS for structure standardization
-
-https://molvs.readthedocs.io/en/latest/index.html
-
-
 # Results
 
-## NPAtlas
+Can be found at:
 
-Fragmented NPAtlas spectral file (.mgf) and associated metadata are available here [NPAtlas_ISDB](https://www.dropbox.com/sh/rz9giwvzuhnvlpo/AABLJIu2EKo7pJrP-ALHFbfua?dl=0)
+//TODO Zenodo (2022-07-07 AR)
