@@ -12,3 +12,4 @@ dependencies:
   - sys
   - pandas
   - python >=3.5.*
+  - requests-html

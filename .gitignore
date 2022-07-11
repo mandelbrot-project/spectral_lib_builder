@@ -5,3 +5,6 @@
 *.log
 *.tar.gz
 *.txt
+
+results/**
+results_neg/**

@@ -7,9 +7,12 @@ All small python scripts require `environment.yml` to be installed to work.
 ## Prior to fragmentation 
 
 Prepare a list of identified SMILES to fragment.
-For the moment, we took the structures from [https://doi.org/10.5281/zenodo.6378223](https://doi.org/10.5281/zenodo.6378223) as starting point (a R solution is given at [scripts/lotus2cfm.R](scripts/lotus2cfm.R) .
+For the moment, we take the structures from <https://doi.org/10.5281/zenodo.6378223> as starting point.
+To prepare the structures to fragment, just run:
 
-//TODO Translate it for python afficionados (2022-07-07 AR)
+```
+python scripts/lotus2cfm.py
+```
 
 ## Prepare CFM on cluster
 
@@ -159,8 +162,17 @@ bash scripts/concat.sh YOUR_RAW_RESULTS_DIR_POS/ isdb_pos.mgf # or
 bash scripts/concat.sh YOUR_RAW_RESULTS_DIR_NEG/ isdb_neg.mgf
 ```
 
+## Listing fragmented entries
+
+For multiple reasons, some entries might not be fragmented.
+We here list the ones correctly fragmented to facilitate further investigation.
+```
+find ./results -type f -name '*.mgf' | sed 's!.*/!!' | sed 's!.mgf!!' > list_fragmented_pos.txt
+find ./results_neg -type f -name '*.mgf' | sed 's!.*/!!' | sed 's!.mgf!!' > list_fragmented_neg.txt
+```
+
 # Results
 
 Can be found at:
 
-//TODO Zenodo (2022-07-07 AR)
+//TODO Zenodo (2022-07-11 AR)
