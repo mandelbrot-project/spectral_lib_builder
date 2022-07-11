@@ -64,7 +64,7 @@ for filename in glob.iglob(str(directory_name) + '*' + str(extension_type), recu
         list_energy_all = list_energy_all_manipulated.sort_values('mass', ascending = True)
     
         # uncomment if you want to output to a different filename
-        mgf_filename = filename.split('.log')[0]+'.mgf'
+        mgf_filename = filename.split('.log')[0].replace('"', "")+'.mgf'
         
         list_energy_all.to_csv(mgf_filename,sep=' ', index=False, header=False)
         # be carefull if you remove the original files

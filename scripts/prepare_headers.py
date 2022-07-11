@@ -31,12 +31,16 @@ except:
     print(delimiter_ouput)
 
 if delimiter_input == "s+":
-    df = pd.read_csv(metadata_file_path, delim_whitespace=True) 
+    df = pd.read_csv(
+        metadata_file_path, 
+        names=[column_name_sik, column_name_smiles], 
+        header=None,
+        delim_whitespace=True) 
 else:
     df = pd.read_csv(metadata_file_path, sep = delimiter_input) 
 
 df['SMILES'] = df[column_name_smiles]
-df['SHORT_IK'] = df[column_name_sik]
+df['SHORT_IK'] = df[column_name_sik].replace('"', "")
 df['ROMol'] = df['SMILES'].map(Chem.MolFromSmiles)
 
 df = df[~df['ROMol'].isnull()]

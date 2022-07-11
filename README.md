@@ -8,7 +8,7 @@ All small python scripts require `environment.yml` to be installed to work.
 
 Prepare a list of identified SMILES to fragment.
 For the moment, we take the structures from <https://doi.org/10.5281/zenodo.6378223> as starting point.
-To prepare the structures to fragment, just run:
+To prepare the structures to fragment, just run [lotus2cfm.py](scripts/lotus2cfm.py):
 
 ```
 python scripts/lotus2cfm.py
@@ -122,10 +122,22 @@ sbatch --array=1-2875 run_cfm_neg.sh
 
 ## Fetch CFM results
 
-Download CFM fragmentation results from the baob server (this command is not generic, it needs to be adapted):
+Download CFM fragmentation results from the baobab server (this command is not generic, it needs to be adapted):
+(We first zip them before for an efficient transfer)
+
 ```
-scp -r rutza@login2.baobab.hpc.unige.ch:posout ./results
-scp -r rutza@login2.baobab.hpc.unige.ch:negout ./results_neg
+zip -r results.zip ./posout
+zip -r results_neg.zip ./negout
+```
+
+```
+scp rutza@login2.baobab.hpc.unige.ch:results.zip ./results.zip
+scp rutza@login2.baobab.hpc.unige.ch:results_neg.zip ./results_neg.zip 
+```
+
+```
+unzip results.zip 
+unzip results_neg.zip
 ```
 
 ## Treating the raw log files
@@ -134,32 +146,33 @@ The output of cfm-predict consist of .log file containing mass spectra, where ea
 Such information might be usefull later but for now we only want to keep the raw ms data:
 If you want to merge the three different energies you can choose between 'max','mean', and 'sum' for the moment.
 ```
-python scripts/log2mgf.py YOUR_RAW_RESULTS_DIR/ log sum
+python scripts/log2mgf.py results/ log sum
+python scripts/log2mgf.py results_neg/ log sum
 ```
 
 ## Populating the mgf headers
 
 ### Preparation of the headers
 
-We need to prepare and adducted table containing the protonated and deprotonated masses:
+We need to prepare and adducted table containing the protonated and deprotonated masses, run [prepare_headers.py](scripts/prepare_headers.py):
 ```
-python scripts/prepare_headers.py YOUR_SMILES_LIST YOUR_DELIMITER YOUR_OUTPUT_PATH YOUR_SMILES_COLUMN_NAME YOUR_SHORT_INCHIKEY_COLUMN_NAME
+python scripts/prepare_headers.py smiles4cfm.txt s+ adducted.tsv YOUR_SMILES_COLUMN_NAME YOUR_SHORT_INCHIKEY_COLUMN_NAME
 ```
 
 ### Addition of the metadata to the individual mgf headers
 
-We can now populate each mgf with its corresponding metadata:
+We can now populate each mgf with its corresponding metadata, run [populate_headers.py](scripts/populate_headers.py):
 ```
- python scripts/populate_headers.py YOUR_ADDUCTED_FILE_PATH YOUR_RAW_RESULTS_DIR_POS/ positive # or
- python scripts/populate_headers.py YOUR_ADDUCTED_FILE_PATH YOUR_RAW_RESULTS_DIR_NEG/ negative 
+python scripts/populate_headers.py adducted.tsv results/ positive
+python scripts/populate_headers.py adducted.tsv results_neg/ negative
 ```
 
 ## Generating the final spectral file
 
-We concatenate each documented mgf files to a single spectral mgf file:
+We concatenate each documented mgf files to a single spectral mgf file, run [concat.sh](scripts/concat.sh):
 ```
-bash scripts/concat.sh YOUR_RAW_RESULTS_DIR_POS/ isdb_pos.mgf # or
-bash scripts/concat.sh YOUR_RAW_RESULTS_DIR_NEG/ isdb_neg.mgf
+bash scripts/concat.sh ./results isdb_pos.mgf
+bash scripts/concat.sh ./results_neg isdb_neg.mgf
 ```
 
 ## Listing fragmented entries
