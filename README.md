@@ -188,4 +188,4 @@ find ./results_neg -type f -name '*.mgf' | sed 's!.*/!!' | sed 's!.mgf!!' > list
 
 Can be found at:
 
-//TODO Zenodo (2022-07-11 AR)
+https://zenodo.org/record/6939173
