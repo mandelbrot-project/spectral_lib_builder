@@ -36,7 +36,7 @@ lotus_4cfm = last_lotus_structures[~last_lotus_structures['structureCleaned_smil
 # Export
 lotus_4cfm.to_csv(
     path_or_buf="smiles4cfm.txt",
-    sep= " ",
+    sep=" ",
     header=False,
     index=False
 )

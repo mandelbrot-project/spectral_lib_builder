@@ -15,12 +15,12 @@ try:
     mass_files_folder_path = sys.argv[2]
     mode = sys.argv[3]
     print('Parsing file '
-        + metadata_file_path
-        + ' and appending metadata to mass raw files loacted in '
-        + mass_files_folder_path
-        + ' in '
-        + mode
-        + ' mode')
+          + metadata_file_path
+          + ' and appending metadata to mass raw files loacted in '
+          + mass_files_folder_path
+          + ' in '
+          + mode
+          + ' mode')
 except:
     print('Please fill metadata file path followed by mass_files_folder_path')
 
@@ -70,21 +70,21 @@ for pos, row in data.items():
         content += "PEPMASS={}\n".format(row[header.index('protonated_emass')])
         content += "CHARGE=1+\n"
     # MSLEVEL=xxx
-    #content += "SOURCE_INSTRUMENT={}-{}\n".format(
-        #row[header.index('INSTRUMENT')],
-       # row[header.index('IONSOURCE')])
+    # content += "SOURCE_INSTRUMENT={}-{}\n".format(
+    # row[header.index('INSTRUMENT')],
+    # row[header.index('IONSOURCE')])
     content += "FILENAME={}\n".format(row[header.index('SHORT_IK')])
-    #content += "InChIKey={}\n".format(row[header.index('InChIKey')])
+    # content += "InChIKey={}\n".format(row[header.index('InChIKey')])
     content += "MOLECULAR_FORMULA={}\n".format(row[header.index('MF')])
     content += "SEQ=*..*\n"
-    #content += "NOTES={}:{}:{}:{}:{}:{}\n".format(
-        #row[header.index('PI')],
-        #row[header.index('DATACOLLECTOR')],
-        # "N/A",  # Change that
-        # "N/A",  # Change that
-        # row[header.index('ACQUISITION')],
-        # "N/A"  # Change that
-        # )
+    # content += "NOTES={}:{}:{}:{}:{}:{}\n".format(
+    # row[header.index('PI')],
+    # row[header.index('DATACOLLECTOR')],
+    # "N/A",  # Change that
+    # "N/A",  # Change that
+    # row[header.index('ACQUISITION')],
+    # "N/A"  # Change that
+    # )
     if mode == "negative":
         content += "IONMODE=NEGATIVE\n"
     else:
@@ -93,9 +93,9 @@ for pos, row in data.items():
     content += "NAME={}\n".format(row[header.index('SHORT_IK')])
     content += "SMILES={}\n".format(row[header.index('SMILES')])
     content += "INCHI={}\n".format(row[header.index('InChI')])
-    #content += "Synonyms={}\n".format(row[header.index('Syn_list')])
-    #content += "LIB={}\n".format(row[header.index('LIB')])    
-    #content += "INCHIAUX={}\n".format(row[header.index('INCHI_KEY')])
+    # content += "Synonyms={}\n".format(row[header.index('Syn_list')])
+    # content += "LIB={}\n".format(row[header.index('LIB')])
+    # content += "INCHIAUX={}\n".format(row[header.index('INCHI_KEY')])
     if mode == "negative":
         content += "LIBRARYQUALITY=In-silico ESI-MS/MS [M-H]- Spectra PREDICTED BY CFM-ID 4.4.7\n"
     else:
@@ -116,7 +116,7 @@ for pos, row in data.items():
             for line in raw_file:
                 content += line.strip() + "\n"
             content += '\n'.join(list(raw_file))
-            content += "END IONS\n"            
+            content += "END IONS\n"
             # Write the output file
             with open(str(mass_files_folder_path) + '{}'.format(filename), 'w') as mgf_file:
                 mgf_file.write(content)
