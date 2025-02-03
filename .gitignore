@@ -6,5 +6,8 @@
 *.tar.gz
 *.txt
 
+in/**
+out/**
+
 results/**
 results_neg/**
