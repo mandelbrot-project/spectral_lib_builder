@@ -153,38 +153,38 @@ def process_zip(zip_path, folder_in_zip, output_prefix, polarity, query_file, in
 
     # Save per-energy files for wikidata
     for energy, spectra in spectra_by_energy.items():
-        save_as_json(spectra, f"{output_prefix}_{polarity_short}_wikidata_{energy}.json")
-        save_as_mgf(spectra, f"{output_prefix}_{polarity_short}_wikidata_{energy}.mgf")
-        save_as_msp(spectra, f"{output_prefix}_{polarity_short}_wikidata_{energy}.msp")
+        save_as_json(spectra, f"{output_prefix}_wikidata_{polarity_short}_{energy}.json")
+        save_as_mgf(spectra, f"{output_prefix}_wikidata_{polarity_short}_{energy}.mgf")
+        save_as_msp(spectra, f"{output_prefix}_wikidata_{polarity_short}_{energy}.msp")
     
     # Save combined all-energy file for wikidata
-    save_as_json(all_spectra, f"{output_prefix}_{polarity_short}_wikidata_energyAll.json")
-    save_as_mgf(all_spectra, f"{output_prefix}_{polarity_short}_wikidata_energyAll.mgf")
-    save_as_msp(all_spectra, f"{output_prefix}_{polarity_short}_wikidata_energyAll.msp")
+    save_as_json(all_spectra, f"{output_prefix}_wikidata_{polarity_short}_energyAll.json")
+    save_as_mgf(all_spectra, f"{output_prefix}_wikidata_{polarity_short}_energyAll.mgf")
+    save_as_msp(all_spectra, f"{output_prefix}_wikidata_{polarity_short}_energyAll.msp")
 
     # Save merged summed spectrum for wikidata
     merged_spectra = merge_spectra(all_spectra)
-    save_as_json(merged_spectra, f"{output_prefix}_{polarity_short}_wikidata_energySum.json")
-    save_as_mgf(merged_spectra, f"{output_prefix}_{polarity_short}_wikidata_energySum.mgf")
-    save_as_msp(merged_spectra, f"{output_prefix}_{polarity_short}_wikidata_energySum.msp")
+    save_as_json(merged_spectra, f"{output_prefix}_wikidata_{polarity_short}_energySum.json")
+    save_as_mgf(merged_spectra, f"{output_prefix}_wikidata_{polarity_short}_energySum.mgf")
+    save_as_msp(merged_spectra, f"{output_prefix}_wikidata_{polarity_short}_energySum.msp")
 
     # Save per-energy files for lotus
     for energy, spectra in spectra_by_energy.items():
         filtered_spectra_energy = [s for s in spectra if s.metadata.get("name") in filtered_keys]
-        save_as_json(filtered_spectra_energy, f"{output_prefix}_{polarity_short}_lotus_{energy}.json")
-        save_as_mgf(filtered_spectra_energy, f"{output_prefix}_{polarity_short}_lotus_{energy}.mgf")
-        save_as_msp(filtered_spectra_energy, f"{output_prefix}_{polarity_short}_lotus_{energy}.msp")
+        save_as_json(filtered_spectra_energy, f"{output_prefix}_lotus_{polarity_short}_{energy}.json")
+        save_as_mgf(filtered_spectra_energy, f"{output_prefix}_lotus_{polarity_short}_{energy}.mgf")
+        save_as_msp(filtered_spectra_energy, f"{output_prefix}_lotus_{polarity_short}_{energy}.msp")
     
     # Save combined all-energy file for lotus
-    save_as_json(lotus_all_spectra, f"{output_prefix}_{polarity_short}_lotus_energyAll.json")
-    save_as_mgf(lotus_all_spectra, f"{output_prefix}_{polarity_short}_lotus_energyAll.mgf")
-    save_as_msp(lotus_all_spectra, f"{output_prefix}_{polarity_short}_lotus_energyAll.msp")
+    save_as_json(lotus_all_spectra, f"{output_prefix}_lotus_{polarity_short}_energyAll.json")
+    save_as_mgf(lotus_all_spectra, f"{output_prefix}_lotus_{polarity_short}_energyAll.mgf")
+    save_as_msp(lotus_all_spectra, f"{output_prefix}_lotus_{polarity_short}_energyAll.msp")
 
     # Save merged summed spectrum for lotus
     merged_lotus_spectra = merge_spectra(lotus_all_spectra)
-    save_as_json(merged_lotus_spectra, f"{output_prefix}_{polarity_short}_lotus_energySum.json")
-    save_as_mgf(merged_lotus_spectra, f"{output_prefix}_{polarity_short}_lotus_energySum.mgf")
-    save_as_msp(merged_lotus_spectra, f"{output_prefix}_{polarity_short}_lotus_energySum.msp")
+    save_as_json(merged_lotus_spectra, f"{output_prefix}_lotus_{polarity_short}_energySum.json")
+    save_as_mgf(merged_lotus_spectra, f"{output_prefix}_lotus_{polarity_short}_energySum.mgf")
+    save_as_msp(merged_lotus_spectra, f"{output_prefix}_lotus_{polarity_short}_energySum.msp")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process .log files from ZIP into MGF/MSP with filtering")
