@@ -1,18 +1,29 @@
-import os
 import zipfile
 import argparse
 import numpy as np
 from collections import defaultdict
 from matchms import Spectrum
 from matchms.exporting import save_as_mgf, save_as_msp
+from rdkit import Chem
+
+def determine_adduct_and_charge(polarity):
+    """Set adduct and charge based on polarity."""
+    if polarity.lower() == "positive":
+        return "[M+H]+", "1+"
+    elif polarity.lower() == "negative":
+        return "[M-H]-", "1-"
+    else:
+        raise ValueError("Polarity must be 'positive' or 'negative'")
 
 
-def parse_out_file_from_content(lines):
-    """Parse file content (list of lines) instead of reading from disk."""
+def parse_out_file_from_content(lines, polarity):
+    """Parse file content and extract metadata and spectra."""
     metadata = {}
     energy_spectra = {}
     current_energy = None
-
+    
+    adduct, charge = determine_adduct_and_charge(polarity)
+    
     for line in lines:
         line = line.strip()
         
@@ -22,15 +33,19 @@ def parse_out_file_from_content(lines):
             continue
         
         # Extract metadata
-        if line.startswith("#SMILES="):
+        if line.startswith("#PREDICTED"):
+            metadata["library"] = line.split("#", 1)[1]
+        elif line.startswith("#ID="):
+            metadata["id"] = line.split("=", 1)[1]
+        elif line.startswith("#SMILES="):
             metadata["smiles"] = line.split("=", 1)[1]
         elif line.startswith("#InChiKey="):
-            metadata["inchikey"] = line.split("=")[1]
+            metadata["inchikey"] = line.split("=", 1)[1]
         elif line.startswith("#Formula="):
-            metadata["formula"] = line.split("=")[1]
+            metadata["formula"] = line.split("=", 1)[1]
         elif line.startswith("#PMass="):
-            metadata["precursor_mz"] = float(line.split("=")[1])
-        elif line.startswith("energy"):  # Start of a new energy level
+            metadata["precursor_mz"] = float(line.split("=", 1)[1])
+        elif line.startswith("energy"):
             current_energy = line
             energy_spectra[current_energy] = []
         elif current_energy and not line.startswith("#"):
@@ -52,11 +67,27 @@ def parse_out_file_from_content(lines):
             sorted_indices = np.argsort(mz_values)
             mz_values = mz_values[sorted_indices]
             intensities = intensities[sorted_indices]
-
+            
+            spectrum_metadata = {
+                "PEPMASS": metadata["precursor_mz"],
+                "CHARGE": charge,
+                "FILENAME": metadata["id"],
+                "MOLECULAR_FORMULA": metadata["formula"],
+                "IONMODE": polarity.upper(),
+                "EXACTMASS": metadata["precursor_mz"] - 1.007276 if polarity == "positive" else metadata["precursor_mz"] + 1.007276,
+                "NAME": metadata["id"],
+                "SMILES": metadata["smiles"],
+                "INCHI": Chem.MolToInchi(Chem.MolFromSmiles(metadata["smiles"])),
+                "LIBRARYQUALITY": metadata["library"],
+                "SCANS": len(mz_values),
+                "ADDUCT": adduct,
+                "ENERGY": energy
+            }
+            
             spectrum = Spectrum(
                 mz=mz_values,
                 intensities=intensities,
-                metadata={**metadata, "energy_level": energy}
+                metadata=spectrum_metadata
             )
             spectra_per_energy[energy] = spectrum
 
@@ -88,7 +119,8 @@ def merge_spectra(spectra):
 
         # Preserve metadata (taking from the first spectrum)
         base_metadata = spec_list[0].metadata.copy()
-        base_metadata["energy_level"] = "energySum"
+        base_metadata["energy"] = "energySum"
+        base_metadata["scans"] = len(unique_mz)
 
         merged_spectra[inchikey] = Spectrum(
             mz=np.array(unique_mz, dtype="float32"),
@@ -99,7 +131,7 @@ def merge_spectra(spectra):
     return list(merged_spectra.values())
 
 
-def process_zip(zip_path, folder_in_zip, output_prefix):
+def process_zip(zip_path, folder_in_zip, output_prefix, polarity):
     """Process .log files from a directory inside a ZIP archive."""
     all_spectra = []
     spectra_by_energy = {}
@@ -110,7 +142,7 @@ def process_zip(zip_path, folder_in_zip, output_prefix):
         for file in file_list:
             with zip_ref.open(file) as f:
                 content = f.read().decode("utf-8").splitlines()
-                spectra_per_energy = parse_out_file_from_content(content)
+                spectra_per_energy = parse_out_file_from_content(content, polarity)
                 for energy, spectrum in spectra_per_energy.items():
                     spectra_by_energy.setdefault(energy, []).append(spectrum)
                     all_spectra.append(spectrum)
@@ -138,6 +170,7 @@ if __name__ == "__main__":
     parser.add_argument("zip_path", help="Path to the ZIP file")
     parser.add_argument("folder_in_zip", help="Folder inside ZIP containing .log files")
     parser.add_argument("output_prefix", help="Prefix for output files (e.g., 'output')")
-
+    parser.add_argument("--polarity", choices=["positive", "negative"], required=True, help="Polarity of the spectra")
+    
     args = parser.parse_args()
-    process_zip(args.zip_path, args.folder_in_zip, args.output_prefix)
+    process_zip(args.zip_path, args.folder_in_zip, args.output_prefix, args.polarity)
