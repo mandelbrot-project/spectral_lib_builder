@@ -5,9 +5,16 @@
 *.log
 *.tar.gz
 *.txt
+*.zip
 
 in/**
 out/**
 
 results/**
 results_neg/**
+
+pos/**
+neg/**
+
+cfm_pos/**
+cfm_neg/**
