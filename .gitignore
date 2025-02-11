@@ -1,7 +1,9 @@
 *.DS_Store
 *.csv
 *.tsv
+*.json
 *.mgf
+*.msp
 *.log
 *.tar.gz
 *.txt
