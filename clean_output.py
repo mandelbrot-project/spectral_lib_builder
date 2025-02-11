@@ -78,6 +78,7 @@ def parse_out_file_from_content(lines, polarity):
                 "NAME": metadata["id"],
                 "SMILES": metadata["smiles"],
                 "INCHI": Chem.MolToInchi(Chem.MolFromSmiles(metadata["smiles"])),
+                "INCHIKEY": metadata["inchikey"],
                 "LIBRARYQUALITY": metadata["library"],
                 "SCANS": len(mz_values),
                 "ADDUCT": adduct,
