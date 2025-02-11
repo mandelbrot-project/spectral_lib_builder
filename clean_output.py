@@ -1,9 +1,10 @@
 import zipfile
 import argparse
 import numpy as np
+import polars as pl
 from collections import defaultdict
 from matchms import Spectrum
-from matchms.exporting import save_as_mgf, save_as_msp
+from matchms.exporting import save_as_json, save_as_mgf, save_as_msp
 from rdkit import Chem
 
 def determine_adduct_and_charge(polarity):
@@ -21,7 +22,6 @@ def parse_out_file_from_content(lines, polarity):
     metadata = {}
     energy_spectra = {}
     current_energy = None
-    
     adduct, charge = determine_adduct_and_charge(polarity)
     
     for line in lines:
@@ -51,8 +51,7 @@ def parse_out_file_from_content(lines, polarity):
         elif current_energy and not line.startswith("#"):
             parts = line.split()
             if len(parts) >= 2:
-                mz = float(parts[0])
-                intensity = float(parts[1])
+                mz, intensity = map(float, parts[:2])
                 energy_spectra[current_energy].append((mz, intensity))
 
     # Create matchms Spectrum objects for each energy level
@@ -85,11 +84,7 @@ def parse_out_file_from_content(lines, polarity):
                 "ENERGY": energy
             }
             
-            spectrum = Spectrum(
-                mz=mz_values,
-                intensities=intensities,
-                metadata=spectrum_metadata
-            )
+            spectrum = Spectrum(mz=mz_values, intensities=intensities, metadata=spectrum_metadata)
             spectra_per_energy[energy] = spectrum
 
     return spectra_per_energy
@@ -132,7 +127,7 @@ def merge_spectra(spectra):
     return list(merged_spectra.values())
 
 
-def process_zip(zip_path, folder_in_zip, output_prefix, polarity):
+def process_zip(zip_path, folder_in_zip, output_prefix, polarity, query_file, inchikey_file):
     """Process .log files from a directory inside a ZIP archive."""
     all_spectra = []
     spectra_by_energy = {}
@@ -148,30 +143,57 @@ def process_zip(zip_path, folder_in_zip, output_prefix, polarity):
                     spectra_by_energy.setdefault(energy, []).append(spectrum)
                     all_spectra.append(spectrum)
 
-    # Save per-energy files
+    # Read query and short InChIKey files
+    query_df = pl.read_csv(query_file, separator="\t").select("item")
+    inchikey_df = pl.read_csv(inchikey_file, separator="\t")
+    filtered_keys = query_df.join(inchikey_df, on="item", how="inner")["short_inchikey"].to_list()
+    lotus_all_spectra = [s for s in all_spectra if s.metadata.get("name") in filtered_keys]
+
+    polarity_short = polarity[:3].lower()
+
+    # Save per-energy files for wikidata
     for energy, spectra in spectra_by_energy.items():
-        save_as_mgf(spectra, f"{output_prefix}_{energy}.mgf")
-        save_as_msp(spectra, f"{output_prefix}_{energy}.msp")
-        print(f"Saved {len(spectra)} spectra to {output_prefix}_{energy}.mgf and .msp")
+        save_as_json(spectra, f"{output_prefix}_{polarity_short}_wikidata_{energy}.json")
+        save_as_mgf(spectra, f"{output_prefix}_{polarity_short}_wikidata_{energy}.mgf")
+        save_as_msp(spectra, f"{output_prefix}_{polarity_short}_wikidata_{energy}.msp")
+    
+    # Save combined all-energy file for wikidata
+    save_as_json(all_spectra, f"{output_prefix}_{polarity_short}_wikidata_energyAll.json")
+    save_as_mgf(all_spectra, f"{output_prefix}_{polarity_short}_wikidata_energyAll.mgf")
+    save_as_msp(all_spectra, f"{output_prefix}_{polarity_short}_wikidata_energyAll.msp")
 
-    # Save combined all-energy file
-    save_as_mgf(all_spectra, f"{output_prefix}_energyAll.mgf")
-    save_as_msp(all_spectra, f"{output_prefix}_energyAll.msp")
-    print(f"Saved all {len(all_spectra)} spectra to {output_prefix}_energyAll.mgf and .msp")
-
-    # Save merged summed spectrum
+    # Save merged summed spectrum for wikidata
     merged_spectra = merge_spectra(all_spectra)
-    save_as_mgf(merged_spectra, f"{output_prefix}_energySum.mgf")
-    save_as_msp(merged_spectra, f"{output_prefix}_energySum.msp")
-    print("Saved merged spectrum to merged.mgf and merged.msp")
+    save_as_json(merged_spectra, f"{output_prefix}_{polarity_short}_wikidata_energySum.json")
+    save_as_mgf(merged_spectra, f"{output_prefix}_{polarity_short}_wikidata_energySum.mgf")
+    save_as_msp(merged_spectra, f"{output_prefix}_{polarity_short}_wikidata_energySum.msp")
 
+    # Save per-energy files for lotus
+    for energy, spectra in spectra_by_energy.items():
+        filtered_spectra_energy = [s for s in spectra if s.metadata.get("name") in filtered_keys]
+        save_as_json(filtered_spectra_energy, f"{output_prefix}_{polarity_short}_lotus_{energy}.json")
+        save_as_mgf(filtered_spectra_energy, f"{output_prefix}_{polarity_short}_lotus_{energy}.mgf")
+        save_as_msp(filtered_spectra_energy, f"{output_prefix}_{polarity_short}_lotus_{energy}.msp")
+    
+    # Save combined all-energy file for lotus
+    save_as_json(lotus_all_spectra, f"{output_prefix}_{polarity_short}_lotus_energyAll.json")
+    save_as_mgf(lotus_all_spectra, f"{output_prefix}_{polarity_short}_lotus_energyAll.mgf")
+    save_as_msp(lotus_all_spectra, f"{output_prefix}_{polarity_short}_lotus_energyAll.msp")
+
+    # Save merged summed spectrum for lotus
+    merged_lotus_spectra = merge_spectra(lotus_all_spectra)
+    save_as_json(merged_lotus_spectra, f"{output_prefix}_{polarity_short}_lotus_energySum.json")
+    save_as_mgf(merged_lotus_spectra, f"{output_prefix}_{polarity_short}_lotus_energySum.mgf")
+    save_as_msp(merged_lotus_spectra, f"{output_prefix}_{polarity_short}_lotus_energySum.msp")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process .log files inside a ZIP archive into MGF/MSP format")
+    parser = argparse.ArgumentParser(description="Process .log files from ZIP into MGF/MSP with filtering")
     parser.add_argument("zip_path", help="Path to the ZIP file")
     parser.add_argument("folder_in_zip", help="Folder inside ZIP containing .log files")
-    parser.add_argument("output_prefix", help="Prefix for output files (e.g., 'output')")
-    parser.add_argument("--polarity", choices=["positive", "negative"], required=True, help="Polarity of the spectra")
+    parser.add_argument("output_prefix", help="Prefix for output files")
+    parser.add_argument("--polarity", choices=["positive", "negative"], required=True, help="Polarity")
+    parser.add_argument("--query_file", default="query_p703.tsv", help="TSV file with query items")
+    parser.add_argument("--inchikey_file", default="short_inchikeys.tsv", help="TSV file with short InChIKeys")
     
     args = parser.parse_args()
-    process_zip(args.zip_path, args.folder_in_zip, args.output_prefix, args.polarity)
+    process_zip(args.zip_path, args.folder_in_zip, args.output_prefix, args.polarity, args.query_file, args.inchikey_file)

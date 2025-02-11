@@ -134,7 +134,7 @@ def process_smiles_file(input_file, output_directory, search_directory, skip_unf
 
     # Create unique (item, short_inchikey) file
     df_unique_pairs = df_valid.select(["item", "short_inchikey"]).unique()
-    df_unique_pairs.write_csv("inchikeys.tsv", separator="\t")
+    df_unique_pairs.write_csv("short_inchikeys.tsv", separator="\t")
 
     end_time = time.time()
     total_processing_time = (end_time - start_time) / 60
