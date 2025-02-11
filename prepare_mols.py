@@ -22,9 +22,8 @@ def smiles_to_mol_data(smiles):
 
 
 async def cache_fragmented_files(search_directory: Path, skip_unfragmented: bool = True) -> set:
-    """Pre-cache all fragmented fragmented files."""
+    """Pre-cache all fragmented files."""
     fragmented = set()
-    
     if not search_directory.exists():
         return fragmented
 
@@ -50,8 +49,8 @@ async def cache_fragmented_files(search_directory: Path, skip_unfragmented: bool
             except OSError as e:
                 print(f"OSError reading file {file}: {e}")
             except Exception as e:
-                print(f"Unexpected error reading file {file}: {e}")
-                
+                print(f"Error reading file {file}: {e}")
+
     return fragmented
 
 
@@ -125,13 +124,17 @@ def process_smiles_file(input_file, output_directory, search_directory, skip_unf
             
             # Append to the single non-fragmented file
             all_f.write(f"{short_inchikey} {smiles}\n")
-            
+
             if idx % 1000 == 0:
                 print(f"Progress: {idx}/{total_no_fragmented}")
         
         # Write fragmented SMILES
         for short_inchikey, smiles in zip(df_fragmented["short_inchikey"], df_fragmented["smiles"]):
             frag_f.write(f"{short_inchikey} {smiles}\n")
+
+    # Create unique (item, short_inchikey) file
+    df_unique_pairs = df_valid.select(["item", "short_inchikey"]).unique()
+    df_unique_pairs.write_csv("inchikeys.tsv", separator="\t")
 
     end_time = time.time()
     total_processing_time = (end_time - start_time) / 60
