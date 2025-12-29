@@ -1,24 +1,24 @@
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
-
 [project]
 name = "default"
 version = "0.0.1"
 description = "My default environment."
+requires-python = "<3.13.0,>=3.12.0"
 authors = [
-    {name = "Adriano Rutz", email = "adafede@gmail.com"},
+  { name = "Adriano Rutz", email = "adafede@gmail.com" },
+]
+dependencies = [
+  "aiofiles>=24.1.0,<25.0.0",
+  "asyncio>=3.4.3,<4.0.0",
+  "matchms>=0.28.2,<1.0.0",
+  "polars>=1.21.0,<2.0.0",
+  "rdkit>=2024.9.4,<2025.0.0",  # blocked because of matchms
+  "tqdm>=4.67.1,<5.0.0",
 ]
 package-mode = false
-requires-python = "<3.13.0,>=3.12.0"
-dependencies = [
-    "aiofiles>=24.1.0,<25.0.0",
-    "asyncio>=3.4.3,<4.0.0",
-    "matchms>=0.28.2,<1.0.0",
-    "polars>=1.21.0,<2.0.0",
-    "rdkit>=2024.9.4,<2025.0.0", # blocked because of matchms
-    "tqdm>=4.67.1,<5.0.0",
-]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [tool.pdm.build]
 includes = []
